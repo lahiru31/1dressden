@@ -11,21 +11,39 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 class TelephonyManager @Inject constructor(private val context: Context) {
     private val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
     private var telephonyCallback: TelephonyCallback? = null
 
-    fun makePhoneCall(phoneNumber: String) {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-            val intent = Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse("tel:$phoneNumber")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    private val _callState = MutableStateFlow(CallState.IDLE)
+    val callState: StateFlow<CallState> = _callState
+
+    enum class CallState {
+        IDLE,
+        RINGING,
+        OFFHOOK
+    }
+
+    fun makePhoneCall(phoneNumber: String): Boolean {
+        return if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+            try {
+                val intent = Intent(Intent.ACTION_CALL).apply {
+                    data = Uri.parse("tel:$phoneNumber")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+                true
+            } catch (e: Exception) {
+                Log.e("TelephonyManager", "Error making phone call", e)
+                false
             }
-            context.startActivity(intent)
         } else {
             Log.e("TelephonyManager", "Call permission not granted")
+            false
         }
     }
 
@@ -34,17 +52,22 @@ class TelephonyManager @Inject constructor(private val context: Context) {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             telephonyCallback = object : TelephonyCallback(), TelephonyCallback.CallStateListener {
                 override fun onCallStateChanged(state: Int) {
-                    when (state) {
+                    val newState = when (state) {
                         TelephonyManager.CALL_STATE_IDLE -> {
                             Log.d("TelephonyManager", "Call State: IDLE")
+                            CallState.IDLE
                         }
                         TelephonyManager.CALL_STATE_RINGING -> {
                             Log.d("TelephonyManager", "Call State: RINGING")
+                            CallState.RINGING
                         }
                         TelephonyManager.CALL_STATE_OFFHOOK -> {
                             Log.d("TelephonyManager", "Call State: OFFHOOK")
+                            CallState.OFFHOOK
                         }
+                        else -> CallState.IDLE
                     }
+                    _callState.value = newState
                 }
             }
             telephonyManager.registerTelephonyCallback(
@@ -61,26 +84,42 @@ class TelephonyManager @Inject constructor(private val context: Context) {
         telephonyCallback?.let {
             telephonyManager.unregisterTelephonyCallback(it)
             telephonyCallback = null
+            _callState.value = CallState.IDLE
         }
     }
 
-    @Deprecated("Use alternative device identification methods")
-    fun getDeviceId(): String? {
-        return if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+    fun isCallPermissionGranted(): Boolean {
+        return ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CALL_PHONE
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun isPhoneStatePermissionGranted(): Boolean {
+        return ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_PHONE_STATE
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun getPhoneNumber(): String? {
+        return if (isPhoneStatePermissionGranted()) {
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    telephonyManager.imei
-                } else {
-                    @Suppress("DEPRECATION")
-                    telephonyManager.deviceId
-                }
-            } catch (e: SecurityException) {
-                Log.e("TelephonyManager", "Error getting device ID", e)
+                telephonyManager.line1Number
+            } catch (e: Exception) {
+                Log.e("TelephonyManager", "Error getting phone number", e)
                 null
             }
         } else {
-            Log.e("TelephonyManager", "Read phone state permission not granted")
             null
         }
+    }
+
+    fun getNetworkOperatorName(): String {
+        return telephonyManager.networkOperatorName
+    }
+
+    fun isNetworkRoaming(): Boolean {
+        return telephonyManager.isNetworkRoaming
     }
 }
