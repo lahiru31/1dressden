@@ -15,24 +15,40 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val repository: AuthRepository
 ) : ViewModel() {
-    private val _userInfo = MutableStateFlow<Resource<User>?>(value = Resource.Idle)
-    val userInfo: StateFlow<Resource<User>?> = _userInfo
+    private val _userInfo = MutableStateFlow<Resource<User>>(Resource.Loading)
+    val userInfo: StateFlow<Resource<User>> = _userInfo
+
     init {
         getUserInfoFromFirebase()
     }
 
     private fun getUserInfoFromFirebase() = viewModelScope.launch {
-        _userInfo.value = Resource.Loading
-        val result = repository.retrieveData()
-        _userInfo.value = result
+        try {
+            _userInfo.value = Resource.Loading
+            val result = repository.retrieveData()
+            _userInfo.value = result
+        } catch (e: Exception) {
+            _userInfo.value = Resource.Failure(e)
+        }
+    }
+
+    fun updateUserInfoFirebase(user: User) = viewModelScope.launch {
+        try {
+            _userInfo.value = Resource.Loading
+            repository.updateData(user)
+            // Refresh user data after update
+            getUserInfoFromFirebase()
+        } catch (e: Exception) {
+            _userInfo.value = Resource.Failure(e)
+        }
     }
 
     fun logout() {
         repository.logout()
-        _userInfo.value = null
+        _userInfo.value = Resource.Failure(Exception("User logged out"))
     }
 
-    fun updateUserInfoFirebase(user: User) = viewModelScope.launch {
-        repository.updateData(user = user)
+    fun retryLoadingUserInfo() {
+        getUserInfoFromFirebase()
     }
 }

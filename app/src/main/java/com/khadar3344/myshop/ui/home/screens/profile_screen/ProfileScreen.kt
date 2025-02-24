@@ -93,7 +93,18 @@ fun ProfileScreenContent(
                 )
             }
             is Resource.Failure<*> -> {
-                Error(message = profileState.exception.toString())
+                Error(
+                    message = when {
+                        profileState.exception.message?.contains("User not logged in") == true -> 
+                            "Please log in to view your profile"
+                        profileState.exception.message?.contains("User data not found") == true -> 
+                            "Unable to load profile data. Please try again."
+                        else -> "An error occurred: ${profileState.exception.message}"
+                    },
+                    onRetry = {
+                        viewModel.retryLoadingUserInfo()
+                    }
+                )
             }
             is Resource.Loading -> {
                 Loading()

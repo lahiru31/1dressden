@@ -44,7 +44,6 @@ class AuthRepositoryImpl @Inject constructor(
                                 Resource.Success(user)
                             } else
                                 Resource.Failure(task.exception.toString())
-
                         }
                 else
                     Resource.Failure(it.exception.toString())
@@ -52,8 +51,16 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun retrieveData(): Resource<User> {
-        val result = collection.document(currentUser!!.uid).get().await()
         return try {
+            val currentUserId = currentUser?.uid 
+                ?: return Resource.Failure(Exception("User not logged in"))
+                
+            val result = collection.document(currentUserId).get().await()
+            
+            if (!result.exists()) {
+                return Resource.Failure(Exception("User data not found"))
+            }
+            
             val user = User(
                 name = result.getString("name") ?: "",
                 phone = result.getString("phone") ?: "",
@@ -68,23 +75,33 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateData(user: User) {
-        val userMap = hashMapOf(
-            "name" to user.name,
-            "phone" to user.phone,
-            "address" to user.address,
-            "email" to user.email
-        )
-        val profileUpdate = userProfileChangeRequest {
-            displayName = userMap["name"]
+        try {
+            val currentUserId = currentUser?.uid 
+                ?: throw Exception("User not logged in")
+                
+            val userMap = hashMapOf(
+                "name" to user.name,
+                "phone" to user.phone,
+                "address" to user.address,
+                "email" to user.email
+            )
+            
+            val profileUpdate = userProfileChangeRequest {
+                displayName = userMap["name"]
+            }
+            
+            currentUser?.updateProfile(profileUpdate)?.await()
+            collection.document(currentUserId).set(userMap).await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
         }
-        currentUser?.updateProfile(profileUpdate)
-        collection.document(firebaseAuth.uid!!).set(userMap).await()
     }
 
     override suspend fun forgotPassword(email: String): Resource<String> {
         return try {
-            val result = firebaseAuth.sendPasswordResetEmail(email).await().toString()
-            Resource.Success(result)
+            firebaseAuth.sendPasswordResetEmail(email).await()
+            Resource.Success("Password reset email sent successfully")
         } catch (e: Exception) {
             e.printStackTrace()
             Resource.Failure(e)
