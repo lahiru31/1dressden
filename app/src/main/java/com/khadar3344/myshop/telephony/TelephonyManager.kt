@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.telephony.PhoneStateListener
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyCallback
@@ -105,7 +104,7 @@ class TelephonyManager @Inject constructor(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun getPhoneNumbers(): List<String> {
         if (!isPhoneStatePermissionGranted()) {
             return emptyList()
@@ -115,7 +114,8 @@ class TelephonyManager @Inject constructor(private val context: Context) {
             val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 subscriptionManager.activeSubscriptionInfoList?.mapNotNull { subscription: SubscriptionInfo ->
-                    subscription.number.takeIf { it.isNotBlank() }
+                    // Using getPhoneNumber() instead of deprecated number property
+                    telephonyManager.getPhoneNumber(subscription.subscriptionId).takeIf { it.isNotBlank() }
                 } ?: emptyList()
             } else {
                 emptyList()
@@ -138,7 +138,7 @@ class TelephonyManager @Inject constructor(private val context: Context) {
         return telephonyManager.simOperatorName
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun getSignalStrength(): Int {
         return if (isPhoneStatePermissionGranted()) {
             try {
@@ -149,6 +149,25 @@ class TelephonyManager @Inject constructor(private val context: Context) {
             }
         } else {
             -1
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun getNetworkType(): String {
+        return if (isPhoneStatePermissionGranted()) {
+            when (telephonyManager.dataNetworkType) {
+                TelephonyManager.NETWORK_TYPE_LTE -> "4G"
+                TelephonyManager.NETWORK_TYPE_NR -> "5G"
+                TelephonyManager.NETWORK_TYPE_UMTS,
+                TelephonyManager.NETWORK_TYPE_HSDPA,
+                TelephonyManager.NETWORK_TYPE_HSUPA,
+                TelephonyManager.NETWORK_TYPE_HSPA -> "3G"
+                TelephonyManager.NETWORK_TYPE_EDGE,
+                TelephonyManager.NETWORK_TYPE_GPRS -> "2G"
+                else -> "Unknown"
+            }
+        } else {
+            "Unknown"
         }
     }
 }
