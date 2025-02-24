@@ -63,7 +63,8 @@ fun ProfileScreen(
             Toast.makeText(context, "Update user data successfully", Toast.LENGTH_SHORT).show()
         },
         onBackBtnClick = onBackBtnClick,
-        onMapClick = onMapClick
+        onMapClick = onMapClick,
+        viewModel = viewModel
     )
 }
 
@@ -76,7 +77,8 @@ fun ProfileScreenContent(
     logout: () -> Unit,
     updateData: (User) -> Unit,
     onBackBtnClick: () -> Unit,
-    onMapClick: () -> Unit
+    onMapClick: () -> Unit,
+    viewModel: ProfileViewModel
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         when (profileState) {
@@ -93,14 +95,15 @@ fun ProfileScreenContent(
                 )
             }
             is Resource.Failure<*> -> {
+                val errorMessage = when {
+                    profileState.exception.toString().contains("User not logged in") -> 
+                        "Please log in to view your profile"
+                    profileState.exception.toString().contains("User data not found") -> 
+                        "Unable to load profile data. Please try again."
+                    else -> "An error occurred. Please try again."
+                }
                 Error(
-                    message = when {
-                        profileState.exception.message?.contains("User not logged in") == true -> 
-                            "Please log in to view your profile"
-                        profileState.exception.message?.contains("User data not found") == true -> 
-                            "Unable to load profile data. Please try again."
-                        else -> "An error occurred: ${profileState.exception.message}"
-                    },
+                    message = errorMessage,
                     onRetry = {
                         viewModel.retryLoadingUserInfo()
                     }
