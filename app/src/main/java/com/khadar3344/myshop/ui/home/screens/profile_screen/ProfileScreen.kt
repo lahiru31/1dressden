@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Mic
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.filled.KeyboardVoice
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -253,7 +253,7 @@ fun SuccessScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Mic,
+                            imageVector = Icons.Filled.KeyboardVoice,
                             contentDescription = if (isRecording) "Stop Recording" else "Start Recording",
                             tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                         )
@@ -272,7 +272,7 @@ fun SuccessScreen(
                         enabled = recordedFile != null
                     ) {
                         Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
+                            imageVector = if (isPlaying) Icons.Filled.Stop else Icons.Filled.PlayArrow,
                             contentDescription = if (isPlaying) "Stop Playing" else "Start Playing"
                         )
                     }
