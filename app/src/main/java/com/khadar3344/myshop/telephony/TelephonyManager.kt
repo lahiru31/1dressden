@@ -104,8 +104,8 @@ class TelephonyManager @Inject constructor(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun getPhoneNumbers(): List<String> {
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    fun getActiveSubscriptionIds(): List<Int> {
         if (!isPhoneStatePermissionGranted()) {
             return emptyList()
         }
@@ -113,15 +113,14 @@ class TelephonyManager @Inject constructor(private val context: Context) {
         return try {
             val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                subscriptionManager.activeSubscriptionInfoList?.mapNotNull { subscription: SubscriptionInfo ->
-                    // Using getPhoneNumber() instead of deprecated number property
-                    telephonyManager.getPhoneNumber(subscription.subscriptionId).takeIf { it.isNotBlank() }
+                subscriptionManager.activeSubscriptionInfoList?.map { subscription: SubscriptionInfo ->
+                    subscription.subscriptionId
                 } ?: emptyList()
             } else {
                 emptyList()
             }
         } catch (e: Exception) {
-            Log.e("TelephonyManager", "Error getting phone numbers", e)
+            Log.e("TelephonyManager", "Error getting subscription IDs", e)
             emptyList()
         }
     }
