@@ -104,14 +104,26 @@ fun AppNavHost(
                 mediaManager = mediaManager,
                 logout = {
                     navHostController.navigate(SignIn.route) {
-                        popUpTo(SignIn.route) {
+                        popUpTo(navHostController.graph.startDestinationId) {
                             inclusive = true
                         }
                     }
-                    Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Successfully logged out", Toast.LENGTH_SHORT).show()
                 },
-                onBackBtnClick = { navHostController.popBackStack() },
-                onMapClick = { navHostController.navigate(Map.route) }
+                onBackBtnClick = { 
+                    if (navHostController.previousBackStackEntry != null) {
+                        navHostController.popBackStack()
+                    } else {
+                        navHostController.navigate(Home.route)
+                    }
+                },
+                onMapClick = { 
+                    try {
+                        navHostController.navigate(Map.route)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Unable to open map. Please try again.", Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
         }
 
