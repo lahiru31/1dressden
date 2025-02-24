@@ -48,9 +48,10 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var telephonyManager: TelephonyManager
-    
+
     @Inject
     lateinit var mediaManager: MediaManager
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
