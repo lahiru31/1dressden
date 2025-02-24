@@ -39,6 +39,7 @@ import com.khadar3344.myshop.navigation.SignIn
 import com.khadar3344.myshop.navigation.SignUp
 import com.khadar3344.myshop.ui.home.screens.cart_screen.CartViewModel
 import com.khadar3344.myshop.telephony.TelephonyManager
+import com.khadar3344.myshop.multimedia.MediaManager
 import com.khadar3344.myshop.ui.theme.MyShopTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -47,6 +48,9 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var telephonyManager: TelephonyManager
+    
+    @Inject
+    lateinit var mediaManager: MediaManager
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +61,8 @@ class MainActivity : ComponentActivity() {
                 val badgeCount by cartViewModel.badgeCount.collectAsState()
                 ShowScreen(
                     badgeCount = badgeCount,
-                    telephonyManager = telephonyManager
+                    telephonyManager = telephonyManager,
+                    mediaManager = mediaManager
                 ) { newBadgeCount ->
                     cartViewModel.updateBadgeCount(newBadgeCount)
                 }
@@ -72,6 +77,7 @@ private fun ShowScreen(
     appState: EcommerceAppState = rememberEcommerceAppState(),
     badgeCount: Int,
     telephonyManager: TelephonyManager,
+    mediaManager: MediaManager,
     onBadgeCountChange: (Int) -> Unit
 ) {
     // A surface container using the 'background' color from the theme
@@ -107,7 +113,8 @@ private fun ShowScreen(
                     navHostController = navHostController,
                     modifier = Modifier.padding(paddingValues),
                     onBadgeCountChange = onBadgeCountChange,
-                    telephonyManager = telephonyManager
+                    telephonyManager = telephonyManager,
+                    mediaManager = mediaManager
                 )
 
             }

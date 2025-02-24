@@ -1,14 +1,18 @@
 package com.khadar3344.myshop.ui.home.screens.profile_screen
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -22,15 +26,18 @@ import com.khadar3344.myshop.components.CustomAppBar
 import com.khadar3344.myshop.components.CustomDefaultBtn
 import com.khadar3344.myshop.model.User
 import com.khadar3344.myshop.telephony.TelephonyManager
+import com.khadar3344.myshop.multimedia.MediaManager
 import com.khadar3344.myshop.ui.home.component.Error
 import com.khadar3344.myshop.ui.home.component.Loading
 import com.khadar3344.myshop.util.Dimensions
 import com.khadar3344.myshop.util.Resource
+import java.io.File
 
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
     telephonyManager: TelephonyManager,
+    mediaManager: MediaManager,
     logout: () -> Unit,
     onBackBtnClick: () -> Unit,
     onMapClick: () -> Unit
@@ -40,6 +47,8 @@ fun ProfileScreen(
     ProfileScreenContent(
         profileState = profileState,
         telephonyManager = telephonyManager,
+        mediaManager = mediaManager,
+        context = context,
         logout = {
             viewModel.logout()
             logout()
@@ -57,6 +66,8 @@ fun ProfileScreen(
 fun ProfileScreenContent(
     profileState: Resource<User>?,
     telephonyManager: TelephonyManager,
+    mediaManager: MediaManager,
+    context: android.content.Context,
     logout: () -> Unit,
     updateData: (User) -> Unit,
     onBackBtnClick: () -> Unit,
@@ -68,6 +79,8 @@ fun ProfileScreenContent(
                 SuccessScreen(
                     profileState = profileState.data,
                     telephonyManager = telephonyManager,
+                    mediaManager = mediaManager,
+                    context = context,
                     logout = logout,
                     updateData = updateData,
                     onBackBtnClick = onBackBtnClick,
@@ -85,10 +98,13 @@ fun ProfileScreenContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SuccessScreen(
     profileState: User,
     telephonyManager: TelephonyManager,
+    mediaManager: MediaManager,
+    context: android.content.Context,
     logout: () -> Unit,
     updateData: (User) -> Unit,
     onBackBtnClick: () -> Unit,
@@ -101,6 +117,11 @@ fun SuccessScreen(
     val phoneNumberErrorState = remember { mutableStateOf(false) }
     val addressErrorState = remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    
+    // Media states
+    var isRecording by remember { mutableStateOf(false) }
+    var isPlaying by remember { mutableStateOf(false) }
+    var recordedFile by remember { mutableStateOf<File?>(null) }
 
     Column(
         modifier = Modifier
@@ -195,6 +216,71 @@ fun SuccessScreen(
         )
 
         Spacer(modifier = Modifier.height(Dimensions.spacing_large))
+
+        // Voice Note Section
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimensions.spacing_small)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(Dimensions.spacing_medium)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Voice Notes",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = Dimensions.spacing_small)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // Record Button
+                    IconButton(
+                        onClick = {
+                            if (!isRecording) {
+                                val file = File(context.cacheDir, "voice_note.mp3")
+                                mediaManager.startRecording(file)
+                                recordedFile = file
+                            } else {
+                                mediaManager.stopRecording()
+                            }
+                            isRecording = !isRecording
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = if (isRecording) "Stop Recording" else "Start Recording",
+                            tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    // Play Button
+                    IconButton(
+                        onClick = {
+                            if (!isPlaying && recordedFile != null) {
+                                mediaManager.startPlaying(Uri.fromFile(recordedFile))
+                            } else {
+                                mediaManager.stopPlaying()
+                            }
+                            isPlaying = !isPlaying
+                        },
+                        enabled = recordedFile != null
+                    ) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
+                            contentDescription = if (isPlaying) "Stop Playing" else "Start Playing"
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Dimensions.spacing_medium))
 
         Column(
             modifier = Modifier.fillMaxWidth(),

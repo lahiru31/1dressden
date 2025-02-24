@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.khadar3344.myshop.telephony.TelephonyManager
+import com.khadar3344.myshop.multimedia.MediaManager
 import com.khadar3344.myshop.ui.auth.screens.ForgotPasswordScreen
 import com.khadar3344.myshop.ui.auth.screens.LoginScreen
 import com.khadar3344.myshop.ui.auth.screens.SignUpScreen
@@ -28,7 +29,8 @@ fun AppNavHost(
     navHostController: NavHostController,
     modifier: Modifier = Modifier,
     onBadgeCountChange: (Int) -> Unit,
-    telephonyManager: TelephonyManager
+    telephonyManager: TelephonyManager,
+    mediaManager: MediaManager
 ) {
     val context = LocalContext.current
     NavHost(
@@ -99,6 +101,7 @@ fun AppNavHost(
             ProfileScreen(
                 viewModel = viewModel,
                 telephonyManager = telephonyManager,
+                mediaManager = mediaManager,
                 logout = {
                     navHostController.navigate(SignIn.route) {
                         popUpTo(SignIn.route) {
