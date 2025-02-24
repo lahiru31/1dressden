@@ -1,7 +1,11 @@
 package com.khadar3344.myshop.ui.home.screens.profile_screen
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +25,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.core.content.ContextCompat
 import com.khadar3344.myshop.R
 import com.khadar3344.myshop.components.CustomAppBar
 import com.khadar3344.myshop.components.CustomDefaultBtn
@@ -123,6 +128,36 @@ fun SuccessScreen(
     var isPlaying by remember { mutableStateOf(false) }
     var recordedFile by remember { mutableStateOf<File?>(null) }
 
+    // Permission states
+    var hasCallPermission by remember { mutableStateOf(
+        ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+    ) }
+    var hasAudioPermission by remember { mutableStateOf(
+        ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+    ) }
+
+    // Permission launchers
+    val callPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        hasCallPermission = isGranted
+        if (isGranted && phone.isNotEmpty()) {
+            telephonyManager.makePhoneCall(phone)
+        }
+    }
+
+    val audioPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        hasAudioPermission = isGranted
+        if (isGranted) {
+            val file = File(context.cacheDir, "voice_note.mp3")
+            mediaManager.startRecording(file)
+            recordedFile = file
+            isRecording = true
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -177,7 +212,13 @@ fun SuccessScreen(
                     contentDescription = "Phone",
                     modifier = Modifier.clickable {
                         if (phone.isNotEmpty()) {
-                            telephonyManager.makePhoneCall(phone)
+                            if (hasCallPermission) {
+                                telephonyManager.makePhoneCall(phone)
+                            } else {
+                                callPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+                            }
+                        } else {
+                            Toast.makeText(context, "Please enter a phone number", Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
@@ -243,13 +284,18 @@ fun SuccessScreen(
                     IconButton(
                         onClick = {
                             if (!isRecording) {
-                                val file = File(context.cacheDir, "voice_note.mp3")
-                                mediaManager.startRecording(file)
-                                recordedFile = file
+                                if (hasAudioPermission) {
+                                    val file = File(context.cacheDir, "voice_note.mp3")
+                                    mediaManager.startRecording(file)
+                                    recordedFile = file
+                                    isRecording = true
+                                } else {
+                                    audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
                             } else {
                                 mediaManager.stopRecording()
+                                isRecording = false
                             }
-                            isRecording = !isRecording
                         }
                     ) {
                         Icon(
@@ -264,10 +310,11 @@ fun SuccessScreen(
                         onClick = {
                             if (!isPlaying && recordedFile != null) {
                                 mediaManager.startPlaying(Uri.fromFile(recordedFile))
+                                isPlaying = true
                             } else {
                                 mediaManager.stopPlaying()
+                                isPlaying = false
                             }
-                            isPlaying = !isPlaying
                         },
                         enabled = recordedFile != null
                     ) {
