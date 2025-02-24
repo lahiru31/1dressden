@@ -6,6 +6,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.telephony.PhoneStateListener
+import android.telephony.SubscriptionInfo
+import android.telephony.SubscriptionManager
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -102,16 +105,24 @@ class TelephonyManager @Inject constructor(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun getPhoneNumber(): String? {
-        return if (isPhoneStatePermissionGranted()) {
-            try {
-                telephonyManager.line1Number
-            } catch (e: Exception) {
-                Log.e("TelephonyManager", "Error getting phone number", e)
-                null
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    fun getPhoneNumbers(): List<String> {
+        if (!isPhoneStatePermissionGranted()) {
+            return emptyList()
+        }
+
+        return try {
+            val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                subscriptionManager.activeSubscriptionInfoList?.mapNotNull { subscription: SubscriptionInfo ->
+                    subscription.number.takeIf { it.isNotBlank() }
+                } ?: emptyList()
+            } else {
+                emptyList()
             }
-        } else {
-            null
+        } catch (e: Exception) {
+            Log.e("TelephonyManager", "Error getting phone numbers", e)
+            emptyList()
         }
     }
 
@@ -121,5 +132,23 @@ class TelephonyManager @Inject constructor(private val context: Context) {
 
     fun isNetworkRoaming(): Boolean {
         return telephonyManager.isNetworkRoaming
+    }
+
+    fun getSimOperatorName(): String {
+        return telephonyManager.simOperatorName
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getSignalStrength(): Int {
+        return if (isPhoneStatePermissionGranted()) {
+            try {
+                telephonyManager.signalStrength?.level ?: -1
+            } catch (e: Exception) {
+                Log.e("TelephonyManager", "Error getting signal strength", e)
+                -1
+            }
+        } else {
+            -1
+        }
     }
 }
