@@ -21,7 +21,7 @@ fun HomeScreenTopBar(
 ) {
     TopAppBar(
         scrollBehavior = scrollBehavior,
-        title = { Text(text = "My Shop", fontWeight = FontWeight.Bold) },
+        title = { Text(text = "The Dressden", fontWeight = FontWeight.Bold) },
         actions = {
             IconButton(onClick = onSearchIconClicked) {
                 Icon(imageVector = Icons.Default.Search, contentDescription = "Search")

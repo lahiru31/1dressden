@@ -3,6 +3,6 @@
     <style name="Theme.App.MySplash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#FF6650a4</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_shop</item>
-        <item name="postSplashScreenTheme">@style/Theme.MyShop</item>
+        <item name="postSplashScreenTheme">@style/Theme.TheDressden</item>
     </style>
 </resources>
