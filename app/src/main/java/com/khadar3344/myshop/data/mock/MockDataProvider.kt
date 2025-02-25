@@ -10,52 +10,50 @@ object MockDataProvider {
             products = listOf(
                 Product(
                     id = 1,
-                    title = "iPhone 9",
-                    description = "An apple mobile which is nothing like apple",
-                    price = 549,
-                    discountPercentage = 12.96,
-                    rating = 4.69,
-                    stock = 94,
-                    brand = "Apple",
-                    category = "smartphones",
-                    thumbnail = "https://i.dummyjson.com/data/products/1/thumbnail.jpg",
+                    title = "Men's T-Shirt",
+                    description = "Comfortable cotton t-shirt for men.",
+                    price = 19,
+                    discountPercentage = 10.0,
+                    rating = 4.5,
+                    stock = 100,
+                    brand = "Brand A",
+                    category = "clothing",
+                    thumbnail = "https://i.dummyjson.com/data/products/51/thumbnail.jpg",
                     images = listOf(
-                        "https://i.dummyjson.com/data/products/1/1.jpg",
-                        "https://i.dummyjson.com/data/products/1/2.jpg",
-                        "https://i.dummyjson.com/data/products/1/3.jpg",
-                        "https://i.dummyjson.com/data/products/1/4.jpg"
+                        "https://i.dummyjson.com/data/products/51/1.jpg",
+                        "https://i.dummyjson.com/data/products/51/2.jpg"
                     )
                 ),
                 Product(
                     id = 2,
-                    title = "iPhone X",
-                    description = "SIM-Free, Model A19211 6.5-inch Super Retina HD display",
-                    price = 899,
-                    discountPercentage = 17.94,
-                    rating = 4.44,
-                    stock = 34,
-                    brand = "Apple",
-                    category = "smartphones",
-                    thumbnail = "https://i.dummyjson.com/data/products/2/thumbnail.jpg",
+                    title = "Women's Dress",
+                    description = "Stylish summer dress for women.",
+                    price = 49,
+                    discountPercentage = 15.0,
+                    rating = 4.7,
+                    stock = 50,
+                    brand = "Brand B",
+                    category = "clothing",
+                    thumbnail = "https://i.dummyjson.com/data/products/41/thumbnail.jpg",
                     images = listOf(
-                        "https://i.dummyjson.com/data/products/2/1.jpg",
-                        "https://i.dummyjson.com/data/products/2/2.jpg",
-                        "https://i.dummyjson.com/data/products/2/3.jpg"
+                        "https://i.dummyjson.com/data/products/41/1.jpg",
+                        "https://i.dummyjson.com/data/products/41/2.jpg"
                     )
                 ),
                 Product(
                     id = 3,
-                    title = "Samsung Universe 9",
-                    description = "Samsung's new variant which goes beyond Galaxy",
-                    price = 1249,
-                    discountPercentage = 15.46,
-                    rating = 4.09,
-                    stock = 36,
-                    brand = "Samsung",
-                    category = "smartphones",
-                    thumbnail = "https://i.dummyjson.com/data/products/3/thumbnail.jpg",
+                    title = "Men's Jeans",
+                    description = "Classic fit jeans for men.",
+                    price = 39,
+                    discountPercentage = 5.0,
+                    rating = 4.3,
+                    stock = 75,
+                    brand = "Brand C",
+                    category = "clothing",
+                    thumbnail = "https://i.dummyjson.com/data/products/31/thumbnail.jpg",
                     images = listOf(
-                        "https://i.dummyjson.com/data/products/3/1.jpg"
+                        "https://i.dummyjson.com/data/products/31/1.jpg",
+                        "https://i.dummyjson.com/data/products/31/2.jpg"
                     )
                 )
             ),
@@ -66,12 +64,11 @@ object MockDataProvider {
 
     fun getMockCategories(): List<String> {
         return listOf(
-            "smartphones",
-            "laptops",
-            "fragrances",
-            "skincare",
-            "groceries",
-            "home-decoration"
+            "clothing",
+            "accessories",
+            "footwear",
+            "bags",
+            "jewelry"
         )
     }
 }
