@@ -1,7 +1,7 @@
 package com.khadar3344.myshop.di
 
 import android.content.Context
-import com.khadar3344.myshop.BuildConfig
+import com.khadar3344.myshop.util.AppConfig
 import com.khadar3344.myshop.data.network.api.ApiService
 import com.khadar3344.myshop.data.network.repository.MockNetworkRepositoryImpl
 import com.khadar3344.myshop.data.network.repository.NetworkRepository
@@ -52,7 +52,7 @@ object NetworkModule {
         apiService: ApiService
     ): NetworkRepository {
         // Use mock repository for testing
-        return if (BuildConfig.DEBUG) {
+        return if (AppConfig.USE_MOCK_DATA) {
             MockNetworkRepositoryImpl()
         } else {
             NetworkRepositoryImpl(apiService)
