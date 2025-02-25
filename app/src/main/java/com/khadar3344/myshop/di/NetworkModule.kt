@@ -1,8 +1,9 @@
 package com.khadar3344.myshop.di
 
-import android.annotation.SuppressLint
 import android.content.Context
+import com.khadar3344.myshop.BuildConfig
 import com.khadar3344.myshop.data.network.api.ApiService
+import com.khadar3344.myshop.data.network.repository.MockNetworkRepositoryImpl
 import com.khadar3344.myshop.data.network.repository.NetworkRepository
 import com.khadar3344.myshop.data.network.repository.NetworkRepositoryImpl
 import com.khadar3344.myshop.notifications.NotificationHelper
@@ -47,8 +48,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideNetworkRepository(apiService: ApiService): NetworkRepository {
-        return NetworkRepositoryImpl(apiService)
+    fun provideNetworkRepository(
+        apiService: ApiService
+    ): NetworkRepository {
+        // Use mock repository for testing
+        return if (BuildConfig.DEBUG) {
+            MockNetworkRepositoryImpl()
+        } else {
+            NetworkRepositoryImpl(apiService)
+        }
     }
 
     @Provides
